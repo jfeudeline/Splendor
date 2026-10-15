@@ -1,0 +1,119 @@
+# Roadmap
+
+This project implements the board game **Splendor** in Rust, as a learning project.
+The long-term goal is a small board game platform (in the spirit of Board Game Arena)
+playable on web and mobile, in multiplayer and/or against AI players.
+
+## Vision
+
+| Horizon | Target |
+|---|---|
+| **MVP** | Local CLI game of base Splendor (2–4 players) against AI players. |
+| Mid term | Web app (solo vs AI in the browser, offline-capable PWA), then real-time online multiplayer. |
+| Long term | Desktop/mobile apps (Tauri), async play, external bots, and a second game (**Agricola**) that drives the extraction of a generic platform. |
+
+### MVP functional scope
+
+- Full base rules of Splendor, 2–4 players (90 development cards, 10 nobles, reservations,
+  gold, 10-token limit, end of game at 15 prestige points with final round and tie-breaker).
+  Clarifications and deliberate deviations are listed in [rules/splendor.md](rules/splendor.md).
+- Any mix of human (hot-seat) and AI players.
+- AI levels: **random**, **greedy/heuristic**, **ISMCTS**.
+- AIs are fair: they only see what a human in their seat would see.
+- Headless AI-vs-AI simulation of many games, with statistics (win rates, game length).
+- Save / resume a game in progress.
+- Replay a finished game step by step.
+- Plain text CLI first; a richer TUI (ratatui) comes after the MVP.
+
+## Guiding principles
+
+1. **Pure engine**: no I/O, no threads, no clock. Randomness comes from a seeded RNG,
+   with our own shuffle so that replays survive dependency upgrades.
+   The engine compiles to WASM (checked in CI from day one) and is testable, replayable
+   and fast enough for search AIs. AIs follow the same rules: search budgets are
+   iterations or a caller-provided clock.
+   See [ADR 0003](adr/0003-pure-deterministic-engine.md) and [ADR 0008](adr/0008-reproducible-randomness.md).
+2. **Event-sourced games**: a game is `config + seed + action log`. Save, replay,
+   multiplayer sync and cheat checks all rely on it. See [ADR 0004](adr/0004-event-sourced-game-records.md).
+3. **Player views**: players (human or AI) only ever receive a `PlayerView`, never the
+   full state. See [ADR 0006](adr/0006-hidden-information-and-player-views.md).
+4. **"Who must decide what"** rather than "whose turn is it", to be ready for games with
+   multi-step turns, interrupts and simultaneous decisions. A player asked to decide
+   always has at least one legal action. See [ADR 0005](adr/0005-game-trait-and-decision-model.md).
+5. **Minimal abstraction now, the rest when the second game arrives.**
+
+## Target architecture
+
+```
+Splendor/                 Cargo workspace
+├── crates/
+│   ├── game-core/        Game trait, PlayerId, Status, Outcome, GameRecord, RNG helpers
+│   ├── splendor/         Splendor rules, card data, player views
+│   ├── ai/               Agent trait + Random, Greedy, ISMCTS (generic over Game)
+│   ├── cli/              binary: play, hot-seat, save/load, replay, simulator
+│   ├── splendor-wasm/    (later) wasm-bindgen bindings
+│   └── server/           (later) axum + WebSocket + sqlx
+├── web/                  (later) React + TypeScript + Vite, PWA, then Tauri
+└── docs/
+    ├── ROADMAP.md
+    ├── adr/              Architecture Decision Records
+    └── rules/            rules notes and clarifications
+```
+
+See [ADR 0002](adr/0002-cargo-workspace-layout.md) and [ADR 0007](adr/0007-frontend-stack.md).
+
+## Phases
+
+Sizes are relative: **S** = 1–2 sessions, **M** = 3–5 sessions, **L** = 6+ sessions.
+
+| # | Phase | Content | Size | Rust topics |
+|---|---|---|---|---|
+| 0 | Foundations | Cargo workspace with empty crates, CI (fmt, clippy, tests, `wasm32` check) | S | Cargo, workspaces, tooling |
+| 1 | Splendor model | Reproducible RNG helpers with golden tests (ADR 0008), types (gems, tokens, cards, nobles), data for 90 cards and 10 nobles, setup per player count | M | enums, structs, newtypes, traits, serde, unit tests |
+| 2 | Rules | Legal actions, apply, follow-up decisions (discard, noble choice), pass, end of game, player views; settle open entries of [rules/splendor.md](rules/splendor.md) | L | `Result`, error handling, traits, ownership |
+| 3 | **Playable CLI** 🎯 | Text rendering, move input, hot-seat, random agent | M | I/O, parsing, clap |
+| 4 | Invariants | proptest over thousands of random games: token conservation, no illegal action accepted, never an empty action list, games always terminate… | S | property-based testing |
+| 5 | Game records | Save/resume and replay through a versioned JSON `GameRecord` | S | serialization, format versioning |
+| 6 | Greedy AI + arena | Heuristic agent, parallel N-game simulator with stats, criterion benchmarks | M | rayon, criterion, profiling |
+| 7 | **ISMCTS** 🏁 | Information-set MCTS with determinization from the player view, iteration budget, measured against greedy in the arena; optimize allocations if benchmarks require it (ADR 0005) | L | generics, performance, allocation |
+| | *MVP complete* | | | |
+| 8 | TUI | ratatui interface | M | UI architecture, event loop |
+| 9 | Web solo | `splendor-wasm`, React + TS front, AI in a Web Worker, offline PWA; confirm ADR 0007 | L | wasm-bindgen, FFI boundary |
+| 10 | Real-time server | axum, WebSocket rooms, reconnection, SQLite then Postgres, simple accounts | L | async, tokio, shared state, sqlx |
+| 11 | Advanced multiplayer | Async (turn-based) games with notifications, AI replacement of disconnected players, JSON protocol for external bots | M | API design |
+| 12 | Apps | Tauri 2 packaging (desktop, then mobile); Capacitor as fallback | M | Tauri, cross-compilation |
+| 13 | Agricola | Second game, then extraction of platform abstractions (lobby, rendering, game options) | XL | effect systems, large-scale design |
+
+🎯 first playable milestone (play against a random AI) — 🏁 MVP.
+
+The playable CLI comes before property-based tests so that the game can be played as
+early as possible; unit tests written during phases 1–2 cover the rules in the meantime.
+
+### Pace
+
+At a few hours per week, the MVP (phases 0–7) represents roughly 25–35 sessions, i.e.
+several months. Phase 3 is the first moment the game can actually be played; everything
+before it should stay as lean as possible.
+
+## Open questions
+
+These will be settled (and recorded as ADRs or in [rules/splendor.md](rules/splendor.md))
+when the corresponding phase starts.
+
+- **Rules clarifications**: taking fewer than 3 gems, all players passing in a row —
+  see [rules/splendor.md](rules/splendor.md). Payment is automatic (deliberate deviation,
+  documented there).
+- **Card data**: the 90 cards and 10 nobles must be checked against the official list;
+  a test will verify totals per level.
+- **Licensing**: the code is MIT, but Splendor and Agricola (rules, card data, artwork)
+  belong to their publishers. The public repository contains card data; this is fine for
+  a personal learning project, but a public release of the game would require a license
+  from the publishers.
+
+## Way of working
+
+- Small, reviewable steps: each phase is split into focused commits.
+- Each step comes with an explanation of the Rust concepts involved and the reasons behind
+  design choices.
+- Significant decisions are recorded in [docs/adr](adr/); ADRs stay *Proposed* while
+  their details are still expected to change (see [ADR 0001](adr/0001-record-architecture-decisions.md)).
