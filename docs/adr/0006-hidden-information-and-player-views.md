@@ -30,5 +30,5 @@ players' face-down reserved cards (only their count and level).
 
 - The same view type feeds the CLI, the web front, the server protocol and AIs.
 - Games must provide a way to sample a full state consistent with a view
-  (for ISMCTS); this may become a trait method in phase 9.
+  (for ISMCTS); this may become a trait method in phase 10.
 - Spectator views (no hidden information revealed) can be added in the same way.

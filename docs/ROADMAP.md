@@ -9,8 +9,8 @@ playable on web and mobile, in multiplayer and/or against AI players.
 | Horizon | Target |
 |---|---|
 | **MVP** | Local CLI game of base Splendor (2–4 players) against simple AI players (random, greedy). |
-| Mid term | Web app (solo vs AI in the browser, offline-capable PWA), then real-time online multiplayer, then stronger AI (ISMCTS). |
-| Long term | Desktop/mobile apps (Tauri), async play, external bots, and a second game (**Agricola**) that drives the extraction of a generic platform. |
+| Mid term | A second, small game (**6 nimmt!**) to validate the generic model, then web app (solo vs AI in the browser, offline-capable PWA), real-time online multiplayer, and stronger AI (ISMCTS). |
+| Long term | Desktop/mobile apps (Tauri), async play, external bots, and a third, much larger game (**Agricola**) that drives the extraction of a generic platform. |
 
 The order favours a **vertical slice** (engine → CLI → web → server) over AI strength:
 integration (WASM boundary, player views, game records, network sync) is where the
@@ -26,7 +26,7 @@ without changing the web or server code.
 - AI levels: **random** and **greedy/heuristic** (ISMCTS comes after the online phases).
 - AIs are fair: they only see what a human in their seat would see.
 - Headless AI-vs-AI simulation of many games (minimal: robustness check and basic
-  results; detailed statistics come with the arena in phase 9).
+  results; detailed statistics come with the arena in phase 10).
 - Save / resume a game in progress.
 - Replay a finished game step by step.
 - Plain text CLI. No TUI is planned: the web app is the rich interface.
@@ -55,6 +55,7 @@ Splendor/                 Cargo workspace
 ├── crates/
 │   ├── game-core/        Game trait, PlayerId, Status, Outcome, GameRecord, RNG helpers
 │   ├── splendor/         Splendor rules, card data, player views
+│   ├── six-nimmt/        (phase 7) 6 nimmt! rules, second game validating the model
 │   ├── ai/               Agent trait + Random, Greedy, ISMCTS (generic over Game)
 │   ├── cli/              binary: play, hot-seat, save/load, replay, simulator
 │   ├── splendor-wasm/    (later) wasm-bindgen bindings
@@ -79,34 +80,50 @@ Sizes are relative: **S** = 1–2 sessions, **M** = 3–5 sessions, **L** = 6+ s
 | 2 | Rules | Legal actions, apply, follow-up decisions (discard, noble choice), pass, end of game, player views; settle open entries of [rules/splendor.md](rules/splendor.md) | L | `Result`, error handling, traits, ownership |
 | 3 | **Playable CLI** 🎯 | Text rendering, move input, hot-seat, random agent | M | I/O, parsing, clap |
 | 4 | Invariants + minimal simulator | proptest over thousands of random games: token conservation, no illegal action accepted, never an empty action list, games always terminate…; CLI command to run N headless AI-vs-AI games | S | property-based testing |
-| 5 | Game records | Save/resume and replay through a versioned JSON `GameRecord` (also the basis of the server in phase 8) | S | serialization, format versioning |
+| 5 | Game records | Save/resume and replay through a versioned JSON `GameRecord` (also the basis of the server in phase 9) | S | serialization, format versioning |
 | 6 | **Greedy AI** 🏁 | Heuristic agent (buy the best affordable card, otherwise take tokens towards a target card…), checked against random with the minimal simulator | S | traits, scoring functions |
 | | *MVP complete* | | | |
-| 7 | Web solo | `splendor-wasm`, React + TS front, AI in a Web Worker, offline PWA; confirm ADR 0007 | L | wasm-bindgen, FFI boundary |
-| 8 | Real-time server | axum, WebSocket rooms, reconnection, SQLite then Postgres, simple accounts | L | async, tokio, shared state, sqlx |
-| 9 | Arena + ISMCTS | Parallel N-game arena with statistics, criterion benchmarks, information-set MCTS with determinization from the player view and iteration budget, measured against greedy; optimize allocations if benchmarks require it (ADR 0005) | L | rayon, criterion, generics, performance |
-| 10 | Advanced multiplayer | Async (turn-based) games with notifications, AI replacement of disconnected players, JSON protocol for external bots | M | API design |
-| 11 | Apps | Tauri 2 packaging (desktop, then mobile); Capacitor as fallback | M | Tauri, cross-compilation |
-| 12 | Agricola | Second game, then extraction of platform abstractions (lobby, rendering, game options) | XL | effect systems, large-scale design |
+| 7 | Second game: 6 nimmt! | Rules of *6 nimmt!* in its own crate, playable through the existing generic CLI, simulator, records and random agent (plus a simple greedy agent); fix the `Game` trait where it does not fit and confirm ADR 0005 | M | generics, trait design |
+| 8 | Web solo | `splendor-wasm`, React + TS front, AI in a Web Worker, offline PWA; game selection from the start; confirm ADR 0007 | L | wasm-bindgen, FFI boundary |
+| 9 | Real-time server | axum, WebSocket rooms, reconnection, SQLite then Postgres, simple accounts; multi-game from the start | L | async, tokio, shared state, sqlx |
+| 10 | Arena + ISMCTS | Parallel N-game arena with statistics, criterion benchmarks, information-set MCTS with determinization from the player view and iteration budget, measured against greedy; optimize allocations if benchmarks require it (ADR 0005) | L | rayon, criterion, generics, performance |
+| 11 | Advanced multiplayer | Async (turn-based) games with notifications, AI replacement of disconnected players, JSON protocol for external bots | M | API design |
+| 12 | Apps | Tauri 2 packaging (desktop, then mobile); Capacitor as fallback | M | Tauri, cross-compilation |
+| 13 | Agricola | Third game, then extraction of platform abstractions (lobby, rendering, game options) | XL | effect systems, large-scale design |
 
 🎯 first playable milestone (play against a random AI) — 🏁 MVP.
 
 The playable CLI comes before property-based tests so that the game can be played as
 early as possible; unit tests written during phases 1–2 cover the rules in the meantime.
 
+A second game comes right after the MVP, before the web and server layers are built on
+the `Game` trait. Splendor only exercises part of the decision model (ADR 0005); *6 nimmt!*
+is small but covers what Splendor does not:
+
+| Model aspect | Splendor | 6 nimmt! |
+|---|---|---|
+| Simultaneous decisions (`AwaitingDecision` with several players) | no, always one player | yes, everyone picks a card secretly |
+| Follow-up decision by a player other than the last one to act | no | yes, the owner of a too-low card picks a row during resolution |
+| Randomness during the game | no, everything shuffled at setup | yes, new deal every round |
+| Hidden hand for every player | partial (reserved cards) | yes |
+| Player count | 2–4 | 2–10 |
+
+Fixing the trait at this point is cheap: only the CLI, the simulator and the simple agents
+depend on it.
+
 A greedy AI is kept in the MVP because a random opponent makes solo play pointless once
 the rules are known; it is cheap and makes solo play credible on the web too.
 
-Known trade-off of this order: if ISMCTS benchmarks (phase 9) require changing the `Game`
-trait for performance (see ADR 0005), the web and server code built in phases 7–8 will
+Known trade-off of this order: if ISMCTS benchmarks (phase 10) require changing the `Game`
+trait for performance (see ADR 0005), the web and server code built in phases 8–9 will
 have to follow. The risk is limited because both use the trait through generic code.
 
 ### Pace
 
 At a few hours per week, the MVP (phases 0–6) represents roughly 15–25 sessions.
 Phase 3 is the first moment the game can actually be played; everything before it should
-stay as lean as possible. Phases 7 and 8 are each large: expect several months between
-the MVP and online play.
+stay as lean as possible. Phase 7 (second game) is medium; phases 8 and 9 are each large:
+expect several months between the MVP and online play.
 
 ## Open questions
 
@@ -118,8 +135,8 @@ when the corresponding phase starts.
   documented there).
 - **Card data**: the 90 cards and 10 nobles must be checked against the official list;
   a test will verify totals per level.
-- **Licensing**: the code is MIT, but Splendor and Agricola (rules, card data, artwork)
-  belong to their publishers. The public repository contains card data; this is fine for
+- **Licensing**: the code is MIT, but Splendor, 6 nimmt! and Agricola (rules, card data,
+  artwork) belong to their publishers. The public repository contains card data; this is fine for
   a personal learning project, but a public release of the game would require a license
   from the publishers.
 

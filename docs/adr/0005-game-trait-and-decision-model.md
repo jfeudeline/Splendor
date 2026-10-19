@@ -1,6 +1,6 @@
 # 0005. `Game` trait and decision model
 
-- Status: Proposed (signatures to be confirmed during phases 1–2)
+- Status: Proposed (signatures to be refined during phases 1–2, confirmed by the second game in phase 7)
 - Date: 2026-10-15
 
 ## Context
@@ -68,6 +68,10 @@ Generic code is written as `fn play<G: Game>(game: &mut G, …)`, and `GameRecor
   is possible) is atomic; discarding tokens above 10 and choosing among several eligible
   nobles are separate follow-up decisions, tracked by an internal
   `Phase { Main, Discard, ChooseNoble }`.
+- **6 nimmt!** (phase 7) is the second game, chosen to exercise what Splendor does not:
+  simultaneous decisions (all players pick a card secretly), a follow-up decision by
+  another player during resolution (choosing a row to take), and randomness during the
+  game (new deal each round). It must fit the trait without game-specific hacks.
 - **Agricola** will add a decision stack and an effect system inside its own crate,
   without changing the trait.
 - **Randomness** stays an internal seeded RNG (ADRs 0003 and 0008). For Splendor, all
@@ -77,7 +81,7 @@ Generic code is written as `fn play<G: Game>(game: &mut G, …)`, and `GameRecor
 ### Known performance trade-off
 
 `status()` and `legal_actions()` allocate a `Vec` on every call, and search AIs call them
-millions of times. This is accepted for clarity. If the criterion benchmarks of phase 9
+millions of times. This is accepted for clarity. If the criterion benchmarks of phase 10
 show it matters, candidates are: `SmallVec`, a player bitset in `Status`, or
 `legal_actions_into(&self, player, &mut Vec<Action>)` to reuse a buffer. Such a change
 is recorded in a new ADR.
