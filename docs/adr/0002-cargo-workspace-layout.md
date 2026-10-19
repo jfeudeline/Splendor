@@ -6,8 +6,8 @@
 ## Context
 
 The project will contain a game engine, AI players, a CLI, and later WASM bindings, a
-server and a web front-end. A second game (Agricola) is planned. These parts have
-different dependencies and compilation targets.
+server and a web front-end. Other games (6 nimmt!, Gang of Four, Agricola) are planned.
+These parts have different dependencies and compilation targets.
 
 ## Decision
 
