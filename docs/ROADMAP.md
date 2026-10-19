@@ -8,9 +8,14 @@ playable on web and mobile, in multiplayer and/or against AI players.
 
 | Horizon | Target |
 |---|---|
-| **MVP** | Local CLI game of base Splendor (2–4 players) against AI players. |
-| Mid term | Web app (solo vs AI in the browser, offline-capable PWA), then real-time online multiplayer. |
+| **MVP** | Local CLI game of base Splendor (2–4 players) against simple AI players (random, greedy). |
+| Mid term | Web app (solo vs AI in the browser, offline-capable PWA), then real-time online multiplayer, then stronger AI (ISMCTS). |
 | Long term | Desktop/mobile apps (Tauri), async play, external bots, and a second game (**Agricola**) that drives the extraction of a generic platform. |
+
+The order favours a **vertical slice** (engine → CLI → web → server) over AI strength:
+integration (WASM boundary, player views, game records, network sync) is where the
+architecture can prove wrong, while stronger AIs plug in later through the `Agent` trait
+without changing the web or server code.
 
 ### MVP functional scope
 
@@ -18,12 +23,13 @@ playable on web and mobile, in multiplayer and/or against AI players.
   gold, 10-token limit, end of game at 15 prestige points with final round and tie-breaker).
   Clarifications and deliberate deviations are listed in [rules/splendor.md](rules/splendor.md).
 - Any mix of human (hot-seat) and AI players.
-- AI levels: **random**, **greedy/heuristic**, **ISMCTS**.
+- AI levels: **random** and **greedy/heuristic** (ISMCTS comes after the online phases).
 - AIs are fair: they only see what a human in their seat would see.
-- Headless AI-vs-AI simulation of many games, with statistics (win rates, game length).
+- Headless AI-vs-AI simulation of many games (minimal: robustness check and basic
+  results; detailed statistics come with the arena in phase 9).
 - Save / resume a game in progress.
 - Replay a finished game step by step.
-- Plain text CLI first; a richer TUI (ratatui) comes after the MVP.
+- Plain text CLI. No TUI is planned: the web app is the rich interface.
 
 ## Guiding principles
 
@@ -72,28 +78,35 @@ Sizes are relative: **S** = 1–2 sessions, **M** = 3–5 sessions, **L** = 6+ s
 | 1 | Splendor model | Reproducible RNG helpers with golden tests (ADR 0008), types (gems, tokens, cards, nobles), data for 90 cards and 10 nobles, setup per player count | M | enums, structs, newtypes, traits, serde, unit tests |
 | 2 | Rules | Legal actions, apply, follow-up decisions (discard, noble choice), pass, end of game, player views; settle open entries of [rules/splendor.md](rules/splendor.md) | L | `Result`, error handling, traits, ownership |
 | 3 | **Playable CLI** 🎯 | Text rendering, move input, hot-seat, random agent | M | I/O, parsing, clap |
-| 4 | Invariants | proptest over thousands of random games: token conservation, no illegal action accepted, never an empty action list, games always terminate… | S | property-based testing |
-| 5 | Game records | Save/resume and replay through a versioned JSON `GameRecord` | S | serialization, format versioning |
-| 6 | Greedy AI + arena | Heuristic agent, parallel N-game simulator with stats, criterion benchmarks | M | rayon, criterion, profiling |
-| 7 | **ISMCTS** 🏁 | Information-set MCTS with determinization from the player view, iteration budget, measured against greedy in the arena; optimize allocations if benchmarks require it (ADR 0005) | L | generics, performance, allocation |
+| 4 | Invariants + minimal simulator | proptest over thousands of random games: token conservation, no illegal action accepted, never an empty action list, games always terminate…; CLI command to run N headless AI-vs-AI games | S | property-based testing |
+| 5 | Game records | Save/resume and replay through a versioned JSON `GameRecord` (also the basis of the server in phase 8) | S | serialization, format versioning |
+| 6 | **Greedy AI** 🏁 | Heuristic agent (buy the best affordable card, otherwise take tokens towards a target card…), checked against random with the minimal simulator | S | traits, scoring functions |
 | | *MVP complete* | | | |
-| 8 | TUI | ratatui interface | M | UI architecture, event loop |
-| 9 | Web solo | `splendor-wasm`, React + TS front, AI in a Web Worker, offline PWA; confirm ADR 0007 | L | wasm-bindgen, FFI boundary |
-| 10 | Real-time server | axum, WebSocket rooms, reconnection, SQLite then Postgres, simple accounts | L | async, tokio, shared state, sqlx |
-| 11 | Advanced multiplayer | Async (turn-based) games with notifications, AI replacement of disconnected players, JSON protocol for external bots | M | API design |
-| 12 | Apps | Tauri 2 packaging (desktop, then mobile); Capacitor as fallback | M | Tauri, cross-compilation |
-| 13 | Agricola | Second game, then extraction of platform abstractions (lobby, rendering, game options) | XL | effect systems, large-scale design |
+| 7 | Web solo | `splendor-wasm`, React + TS front, AI in a Web Worker, offline PWA; confirm ADR 0007 | L | wasm-bindgen, FFI boundary |
+| 8 | Real-time server | axum, WebSocket rooms, reconnection, SQLite then Postgres, simple accounts | L | async, tokio, shared state, sqlx |
+| 9 | Arena + ISMCTS | Parallel N-game arena with statistics, criterion benchmarks, information-set MCTS with determinization from the player view and iteration budget, measured against greedy; optimize allocations if benchmarks require it (ADR 0005) | L | rayon, criterion, generics, performance |
+| 10 | Advanced multiplayer | Async (turn-based) games with notifications, AI replacement of disconnected players, JSON protocol for external bots | M | API design |
+| 11 | Apps | Tauri 2 packaging (desktop, then mobile); Capacitor as fallback | M | Tauri, cross-compilation |
+| 12 | Agricola | Second game, then extraction of platform abstractions (lobby, rendering, game options) | XL | effect systems, large-scale design |
 
 🎯 first playable milestone (play against a random AI) — 🏁 MVP.
 
 The playable CLI comes before property-based tests so that the game can be played as
 early as possible; unit tests written during phases 1–2 cover the rules in the meantime.
 
+A greedy AI is kept in the MVP because a random opponent makes solo play pointless once
+the rules are known; it is cheap and makes solo play credible on the web too.
+
+Known trade-off of this order: if ISMCTS benchmarks (phase 9) require changing the `Game`
+trait for performance (see ADR 0005), the web and server code built in phases 7–8 will
+have to follow. The risk is limited because both use the trait through generic code.
+
 ### Pace
 
-At a few hours per week, the MVP (phases 0–7) represents roughly 25–35 sessions, i.e.
-several months. Phase 3 is the first moment the game can actually be played; everything
-before it should stay as lean as possible.
+At a few hours per week, the MVP (phases 0–6) represents roughly 15–25 sessions.
+Phase 3 is the first moment the game can actually be played; everything before it should
+stay as lean as possible. Phases 7 and 8 are each large: expect several months between
+the MVP and online play.
 
 ## Open questions
 

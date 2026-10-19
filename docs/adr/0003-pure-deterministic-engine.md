@@ -38,7 +38,7 @@ engine's.
 
 - **Engine using `thread_rng()` and printing directly**: faster to start, but not
   replayable, hard to test, and unusable in WASM or on a server.
-- **Checking WASM compatibility only at phase 9**: saves one CI line, but lets
+- **Checking WASM compatibility only at phase 7**: saves one CI line, but lets
   incompatible dependencies (e.g. `getrandom` without a WASM backend, `std::time`)
   creep in for months.
 

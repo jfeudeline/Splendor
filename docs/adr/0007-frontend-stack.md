@@ -1,6 +1,6 @@
 # 0007. Front-end stack: React + WASM, then PWA, then Tauri
 
-- Status: Proposed (takes effect in phase 9; to be confirmed then)
+- Status: Proposed (takes effect in phase 7; to be confirmed then)
 - Date: 2026-10-15
 
 ## Context
@@ -42,4 +42,4 @@ Options for mobile:
   is cheap.
 - Most of the Rust learning happens in the engine, AI, WASM bindings and server, which
   are independent of the packaging choice.
-- This decision only takes effect from phase 9; it can be revisited by then.
+- This decision only takes effect from phase 7; it can be revisited by then.

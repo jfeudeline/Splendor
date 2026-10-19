@@ -77,7 +77,7 @@ Generic code is written as `fn play<G: Game>(game: &mut G, …)`, and `GameRecor
 ### Known performance trade-off
 
 `status()` and `legal_actions()` allocate a `Vec` on every call, and search AIs call them
-millions of times. This is accepted for clarity. If the criterion benchmarks of phases 6–7
+millions of times. This is accepted for clarity. If the criterion benchmarks of phase 9
 show it matters, candidates are: `SmallVec`, a player bitset in `Status`, or
 `legal_actions_into(&self, player, &mut Vec<Action>)` to reuse a buffer. Such a change
 is recorded in a new ADR.
