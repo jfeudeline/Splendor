@@ -1,6 +1,7 @@
 # 0007. Front-end stack: React + WASM, then PWA, then Tauri
 
 - Status: Proposed (takes effect in phase 8; to be confirmed then)
+- Amended by: [0011](0011-multi-game-boundary.md)
 - Date: 2026-10-15
 
 ## Context

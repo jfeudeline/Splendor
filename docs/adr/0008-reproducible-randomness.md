@@ -1,6 +1,7 @@
 # 0008. Reproducible randomness
 
 - Status: Accepted
+- Extended by: [0010](0010-game-records-versioning-and-confidentiality.md)
 - Date: 2026-10-15
 
 ## Context

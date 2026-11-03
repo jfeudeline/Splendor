@@ -1,6 +1,6 @@
 # 0005. `Game` trait and decision model
 
-- Status: Proposed (signatures to be refined during phases 1–2, confirmed by the second game in phase 7)
+- Status: Superseded by [0009](0009-decision-protocol-and-agents.md)
 - Date: 2026-10-15
 
 ## Context

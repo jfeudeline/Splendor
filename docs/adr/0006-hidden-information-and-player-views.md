@@ -1,6 +1,7 @@
 # 0006. Hidden information and player views
 
 - Status: Accepted
+- Amended by: [0009](0009-decision-protocol-and-agents.md)
 - Date: 2026-10-15
 
 ## Context

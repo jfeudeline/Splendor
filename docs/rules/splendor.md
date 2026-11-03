@@ -28,7 +28,7 @@ Each entry is marked **Decided** or **Open**. Open entries are settled during ph
     "take 2"), which is marginal. Explicit payment would multiply the actions an AI must
     consider.
   - Making payment explicit later is a breaking change of the action format
-    (`format_version` bump, ADR 0004).
+    (record version bump, ADR 0010).
 
 ## Reserving
 
@@ -36,7 +36,7 @@ Each entry is marked **Decided** or **Open**. Open entries are settled during ph
   (official rule).
 - **Decided — at most 3 reserved cards** per player (official rule).
 - Face-down reserved cards (from the top of a deck) are visible only to their owner
-  (ADR 0006).
+  (ADR 0006 and 0009).
 
 ## Nobles
 
@@ -48,7 +48,7 @@ Each entry is marked **Decided** or **Open**. Open entries are settled during ph
 
 - **Decided (clarification) — pass.** If a player can take no tokens, reserve nothing
   and buy nothing, their only legal action is `Pass`. `Pass` is never legal otherwise.
-  This guarantees that `legal_actions` is never empty (ADR 0005).
+  This guarantees that `legal_actions` is never empty (ADR 0009).
   - *Open*: if every player passes in a row, the game can no longer progress. Proposal:
     the game ends immediately and is scored as usual. Rare enough to settle in phase 2.
 

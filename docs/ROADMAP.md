@@ -40,12 +40,13 @@ without changing the web or server code.
    iterations or a caller-provided clock.
    See [ADR 0003](adr/0003-pure-deterministic-engine.md) and [ADR 0008](adr/0008-reproducible-randomness.md).
 2. **Event-sourced games**: a game is `config + seed + action log`. Save, replay,
-   multiplayer sync and cheat checks all rely on it. See [ADR 0004](adr/0004-event-sourced-game-records.md).
+   multiplayer sync and cheat checks all rely on it. See [ADR 0010](adr/0010-game-records-versioning-and-confidentiality.md).
 3. **Player views**: players (human or AI) only ever receive a `PlayerView`, never the
-   full state. See [ADR 0006](adr/0006-hidden-information-and-player-views.md).
+   full state. See [ADR 0006](adr/0006-hidden-information-and-player-views.md) and
+   [ADR 0009](adr/0009-decision-protocol-and-agents.md).
 4. **"Who must decide what"** rather than "whose turn is it", to be ready for games with
    multi-step turns, interrupts and simultaneous decisions. A player asked to decide
-   always has at least one legal action. See [ADR 0005](adr/0005-game-trait-and-decision-model.md).
+   always has at least one legal action. See [ADR 0009](adr/0009-decision-protocol-and-agents.md).
 5. **Minimal abstraction now, the rest when the second game arrives.**
 
 ## Target architecture
@@ -53,14 +54,15 @@ without changing the web or server code.
 ```
 Splendor/                 Cargo workspace
 ├── crates/
-│   ├── game-core/        Game trait, PlayerId, Status, Outcome, GameRecord, RNG helpers
+│   ├── game-core/        Game trait, Decision, PlayerId, Status, Outcome, RNG helpers
 │   ├── splendor/         Splendor rules, card data, player views
 │   ├── six-nimmt/        (phase 7) 6 nimmt! rules, second game validating the model
 │   ├── gang-of-four/     (phase 11) Gang of Four rules
 │   ├── ai/               Agent trait + Random, Greedy, ISMCTS (generic over Game)
 │   ├── cli/              binary: play, hot-seat, save/load, replay, simulator
-│   ├── splendor-wasm/    (later) wasm-bindgen bindings
-│   └── server/           (later) axum + WebSocket + sqlx
+│   ├── platform/         (phase 7) closed enum, JSON adapter, game registry
+│   ├── platform-wasm/    (phase 8) wasm-bindgen bindings
+│   └── server/           (phase 9) axum + WebSocket + sqlx
 ├── web/                  (later) React + TypeScript + Vite, PWA, then Tauri
 └── docs/
     ├── ROADMAP.md
@@ -68,7 +70,8 @@ Splendor/                 Cargo workspace
     └── rules/            rules notes and clarifications
 ```
 
-See [ADR 0002](adr/0002-cargo-workspace-layout.md) and [ADR 0007](adr/0007-frontend-stack.md).
+See [ADR 0002](adr/0002-cargo-workspace-layout.md), [ADR 0007](adr/0007-frontend-stack.md)
+and [ADR 0011](adr/0011-multi-game-boundary.md).
 
 ## Phases
 
@@ -80,18 +83,22 @@ Sizes are relative: **S** = 1–2 sessions, **M** = 3–5 sessions, **L** = 6+ s
 | 1 | Splendor model | Reproducible RNG helpers with golden tests (ADR 0008), types (gems, tokens, cards, nobles), data for 90 cards and 10 nobles, setup per player count | M | enums, structs, newtypes, traits, serde, unit tests |
 | 2 | Rules | Legal actions, apply, follow-up decisions (discard, noble choice), pass, end of game, player views; settle open entries of [rules/splendor.md](rules/splendor.md) | L | `Result`, error handling, traits, ownership |
 | 3 | **Playable CLI** 🎯 | Text rendering, move input, hot-seat, random agent | M | I/O, parsing, clap |
-| 4 | Invariants + minimal simulator | proptest over thousands of random games: token conservation, no illegal action accepted, never an empty action list, games always terminate…; CLI command to run N headless AI-vs-AI games | S | property-based testing |
+| 4 | Invariants + minimal simulator | proptest over thousands of random games: token conservation, no illegal action accepted, never an empty action list, games always terminate…; benchmark `size_of`, clone and `legal_actions` (ADR 0012); CLI command to run N headless AI-vs-AI games | S | property-based testing, benchmarking |
 | 5 | Game records | Save/resume and replay through a versioned JSON `GameRecord` (also the basis of the server in phase 9) | S | serialization, format versioning |
 | 6 | **Greedy AI** 🏁 | Heuristic agent (buy the best affordable card, otherwise take tokens towards a target card…), checked against random with the minimal simulator | S | traits, scoring functions |
 | | *MVP complete* | | | |
-| 7 | Second game: 6 nimmt! | Rules of *6 nimmt!* in its own crate, playable through the existing generic CLI, simulator, records and random agent (plus a simple greedy agent); fix the `Game` trait where it does not fit and confirm ADR 0005 | M | generics, trait design |
-| 8 | Web solo | `splendor-wasm`, React + TS front, AI in a Web Worker, offline PWA; game selection from the start; confirm ADR 0007 | L | wasm-bindgen, FFI boundary |
-| 9 | Real-time server | axum, WebSocket rooms, reconnection, SQLite then Postgres, simple accounts; multi-game from the start | L | async, tokio, shared state, sqlx |
-| 10 | Arena + ISMCTS | Parallel N-game arena with statistics, criterion benchmarks, information-set MCTS with determinization from the player view and iteration budget, measured against greedy; optimize allocations if benchmarks require it (ADR 0005) | L | rayon, criterion, generics, performance |
+| 7 | Second game: 6 nimmt! | Rules of *6 nimmt!* in its own crate, playable through the existing generic CLI, simulator, records and random agent (plus a simple greedy agent); fix the `Game` trait where it does not fit and confirm ADR 0009 | M | generics, trait design |
+| 8 | Web solo | `platform-wasm`, React + TS front, AI in a Web Worker, offline PWA; game selection from the start; confirm ADR 0007 and 0011 | L | wasm-bindgen, FFI boundary |
+| 9 | Real-time server | axum, WebSocket rooms, reconnection, SQLite only, anonymous room tokens; multi-game from the start; no accounts or Postgres in v1 | L | async, tokio, shared state, sqlx |
+| 10 | Arena + ISMCTS | Parallel N-game arena with statistics, criterion benchmarks, information-set MCTS with determinization from the player view and iteration budget, measured against greedy; optimize allocations if benchmarks require it (ADR 0009 and 0012) | L | rayon, criterion, generics, performance |
 | 11 | Gang of Four | Third game, added end to end (engine, web UI, online play) on the existing platform; ISMCTS with determinizations consistent with private knowledge (cards received in the exchange) | M | combinatorics, algorithms, performance |
 | 12 | Advanced multiplayer | Async (turn-based) games with notifications, AI replacement of disconnected players, JSON protocol for external bots | M | API design |
 | 13 | Apps | Tauri 2 packaging (desktop, then mobile); Capacitor as fallback | M | Tauri, cross-compilation |
 | 14 | Agricola | Fourth game, then extraction of platform abstractions (lobby, rendering, game options) | XL | effect systems, large-scale design |
+
+A throwaway boundary spike was run before phase 1 and is recorded in
+[docs/spikes/0001](spikes/0001-wasm-boundary.md). It validated ADR 0009 and 0011; it
+is not a phase, and is re-run only if the decision or view contract changes.
 
 🎯 first playable milestone (play against a random AI) — 🏁 MVP.
 
@@ -99,7 +106,7 @@ The playable CLI comes before property-based tests so that the game can be playe
 early as possible; unit tests written during phases 1–2 cover the rules in the meantime.
 
 A second game comes right after the MVP, before the web and server layers are built on
-the `Game` trait. Splendor only exercises part of the decision model (ADR 0005); *6 nimmt!*
+the `Game` trait. Splendor only exercises part of the decision model (ADR 0009); *6 nimmt!*
 is small but covers what Splendor does not:
 
 | Model aspect | Splendor | 6 nimmt! |
@@ -129,7 +136,7 @@ A greedy AI is kept in the MVP because a random opponent makes solo play pointle
 the rules are known; it is cheap and makes solo play credible on the web too.
 
 Known trade-off of this order: if ISMCTS benchmarks (phase 10) require changing the `Game`
-trait for performance (see ADR 0005), the web and server code built in phases 8–9 will
+trait for performance (see ADR 0009 and 0012), the web and server code built in phases 8–9 will
 have to follow. The risk is limited because both use the trait through generic code.
 
 ### Pace

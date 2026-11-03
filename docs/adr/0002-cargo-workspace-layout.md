@@ -1,6 +1,7 @@
 # 0002. Cargo workspace layout
 
 - Status: Accepted
+- Amended by: [0011](0011-multi-game-boundary.md)
 - Date: 2026-10-15
 
 ## Context

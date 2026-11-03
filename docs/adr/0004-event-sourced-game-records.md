@@ -1,6 +1,6 @@
 # 0004. Event-sourced game records
 
-- Status: Accepted
+- Status: Superseded by [0010](0010-game-records-versioning-and-confidentiality.md)
 - Date: 2026-10-15
 
 ## Context
