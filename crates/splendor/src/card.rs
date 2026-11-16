@@ -8,6 +8,33 @@ pub struct Card {
     pub cost: GemCounts,
 }
 
+pub const CARD_COUNT: usize = 90;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CardId(u8);
+
+impl CardId {
+    pub fn new(value: u8) -> Option<CardId> {
+        if usize::from(value) < CARD_COUNT {
+            Some(CardId(value))
+        } else {
+            None
+        }
+    }
+
+    pub fn from_index(index: usize) -> Option<CardId> {
+        u8::try_from(index).ok().and_then(Self::new)
+    }
+
+    pub fn index(self) -> usize {
+        self.0 as usize
+    }
+
+    pub fn get(self) -> u8 {
+        self.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -45,5 +72,34 @@ mod tests {
     #[test]
     fn card_is_eight_bytes() {
         assert_eq!(std::mem::size_of::<Card>(), 8);
+    }
+
+    #[test]
+    fn card_id_new_is_valid() {
+        assert_eq!(CardId::new(0), Some(CardId(0)));
+        assert_eq!(CardId::new(89), Some(CardId(89)));
+        assert_eq!(CardId::new(90), None);
+        assert_eq!(CardId::new(255), None);
+    }
+
+    #[test]
+    fn from_index_return_none_if_more_than_card_count() {
+        assert_eq!(CardId::from_index(90), None);
+        assert_eq!(CardId::from_index(usize::MAX), None);
+        assert_eq!(CardId::from_index(CARD_COUNT), None);
+    }
+
+    #[test]
+    fn index_roundtrips() {
+        for index in [0, 1, 42, 89] {
+            let id = CardId::from_index(index).unwrap();
+            assert_eq!(id.index(), index);
+            assert_eq!(CardId::from_index(id.index()), Some(id));
+        }
+    }
+
+    #[test]
+    fn card_id_is_one_byte() {
+        assert_eq!(std::mem::size_of::<CardId>(), 1);
     }
 }
