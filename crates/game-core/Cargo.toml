@@ -6,3 +6,5 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+rand_chacha = { version = "0.10", default-features = false }
+rand_core = "0.10"
