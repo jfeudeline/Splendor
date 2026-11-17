@@ -14,13 +14,13 @@ pub struct NobleId(u8);
 impl NobleId {
     pub fn new(value: u8) -> Option<Self> {
         if usize::from(value) < NOBLE_COUNT {
-            Some(NobleId(value))
+            Some(Self(value))
         } else {
             None
         }
     }
 
-    pub fn from_index(index: usize) -> Option<NobleId> {
+    pub fn from_index(index: usize) -> Option<Self> {
         u8::try_from(index).ok().and_then(Self::new)
     }
 

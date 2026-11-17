@@ -14,20 +14,20 @@ pub const CARD_COUNT: usize = 90;
 pub struct CardId(u8);
 
 impl CardId {
-    pub fn new(value: u8) -> Option<CardId> {
+    pub fn new(value: u8) -> Option<Self> {
         if usize::from(value) < CARD_COUNT {
-            Some(CardId(value))
+            Some(Self(value))
         } else {
             None
         }
     }
 
-    pub fn from_index(index: usize) -> Option<CardId> {
+    pub fn from_index(index: usize) -> Option<Self> {
         u8::try_from(index).ok().and_then(Self::new)
     }
 
     pub fn index(self) -> usize {
-        self.0 as usize
+        usize::from(self.0)
     }
 
     pub fn get(self) -> u8 {
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[test]
-    fn from_index_return_none_if_more_than_card_count() {
+    fn from_index_rejects_out_of_range() {
         assert_eq!(CardId::from_index(90), None);
         assert_eq!(CardId::from_index(usize::MAX), None);
         assert_eq!(CardId::from_index(CARD_COUNT), None);
