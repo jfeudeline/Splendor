@@ -1,6 +1,7 @@
 use crate::{gem::Gem, gem_counts::GemCounts, level::Level};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Card {
     pub level: Level,
     pub bonus: Gem,

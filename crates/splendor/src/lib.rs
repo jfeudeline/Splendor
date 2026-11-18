@@ -2,6 +2,7 @@
 #![deny(clippy::disallowed_types)]
 
 pub mod card;
+pub mod catalog;
 pub mod gem;
 pub mod gem_counts;
 pub mod level;

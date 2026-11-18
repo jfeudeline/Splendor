@@ -3,8 +3,11 @@
 /// Levels are numbered 1 to 3 in the rules. [`Level::value`] keeps that
 /// numbering, while [`Level::index`] maps the levels to the 0-based positions
 /// used by arrays.
+use serde::{Deserialize, Serialize};
+
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Level {
     /// Level 1 development card.
     One = 1,

@@ -1,6 +1,7 @@
 use crate::gem_counts::GemCounts;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Noble {
     pub points: u8,
     pub requirements: GemCounts,

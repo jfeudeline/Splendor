@@ -1,5 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Gem {
     Diamond = 0,
     Sapphire = 1,

@@ -1,6 +1,8 @@
 use crate::gem::Gem;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct GemCounts([u8; 5]);
 
 impl GemCounts {
