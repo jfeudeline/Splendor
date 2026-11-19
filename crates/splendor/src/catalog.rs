@@ -2,7 +2,7 @@ use crate::{card::Card, noble::Noble};
 use serde::Deserialize;
 use std::sync::LazyLock;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Catalog {
     pub cards: Vec<Card>,
     pub nobles: Vec<Noble>,
