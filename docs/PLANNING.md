@@ -1,11 +1,12 @@
 # Planning d'avancement
 
 Dernière mise à jour : 2026-11-19  
-Dernier commit connu : `7c46ec3 Add catalog dump example`
+Dernier commit connu : `358824b Add session planning`
 
 ## Règle de suivi
 
-- Une **séance** = environ 1,5 à 2 heures : un petit pas, des tests, un commit.
+- Une **séance standard** = environ 1,5 à 2 heures : un petit pas, des tests, un commit.
+- Une séance plus longue (par exemple 5 h) compte pour environ 2,5 à 3 séances standard. Toujours noter la durée réelle.
 - En fin de séance, noter :
   - la durée réelle ;
   - le commit de début et le commit de fin ;
@@ -43,7 +44,7 @@ Reste en phase 1 :
 
 | Phase | Contenu | Séances estimées | Statut | Séances réelles |
 |---|---|---:|---|---:|
-| Fin phase 1 | Config, Player, Bank, Market, Decks, setup, tests | 3–5 | en cours | 0 |
+| Fin phase 1 | Config, Player, Bank, Market, Decks, setup, tests | 3–5 | en cours | 1 suivie (5 h) |
 | Phase 2 | `Game`/`Decision`, actions légales, `apply`, défausse, nobles, fin de partie, vues | 10–15 | à faire | 0 |
 | Phase 3 | CLI jouable : rendu, saisie, hot-seat, agent aléatoire | 5–7 | à faire | 0 |
 | Phase 4 | Invariants, simulateur, benchmarks | 3–4 | à faire | 0 |
@@ -79,11 +80,15 @@ Modèle de ligne :
 
 | # | Date | Durée | Commit début | Commit fin | Étape terminée | Notes |
 |---:|---|---|---|---|---|---|
-| 1 | 2026-11-19 | à renseigner |  | `7c46ec3` | Catalogue + tests + planning | À compléter |
+| 1 | 2026-11-19 | 5 h | `eaa1413` | `358824b` | Catalogue, tests, planning | Séance longue, ~2,5–3 séances standard |
 | 2 |  |  |  |  |  |  |
 | 3 |  |  |  |  |  |  |
 | 4 |  |  |  |  |  |  |
 | 5 |  |  |  |  |  |  |
+
+Le suivi commence le 2026-11-19. Les séances antérieures ne sont pas comptées.  
+Les estimations en séances supposent des séances standard de 1,5–2 h.  
+Une séance de 5 h correspond à environ 2,5–3 séances standard.
 
 ## Projection après quelques séances
 
