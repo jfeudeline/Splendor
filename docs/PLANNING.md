@@ -1,7 +1,7 @@
 # Planning d'avancement
 
-Dernière mise à jour : 2026-11-19  
-Dernier commit connu : `358824b Add session planning`
+Dernière mise à jour : 2026-11-26  
+Dernier commit connu : `d34f546 Add PlayerCount with fallible conversion`
 
 ## Règle de suivi
 
@@ -18,7 +18,7 @@ Dernier commit connu : `358824b Add session planning`
 ## État actuel
 
 - Phase 0 : terminée.
-- Phase 1 : en cours, environ 70 %.
+- Phase 1 : en cours, environ 75 %.
 - Phase 2 : pas commencée.
 
 Déjà fait :
@@ -31,10 +31,11 @@ Déjà fait :
 - [x] `Noble`, `NobleId`
 - [x] RNG reproductible (`seed`, `below`, `shuffle`, golden tests)
 - [x] Catalogue RON (90 cartes, 10 nobles) + chargeur + tests
+- [x] `PlayerCount` (2–4 joueurs) + conversion faillible `TryFrom<u8>`
 
 Reste en phase 1 :
 
-- [ ] `Config` + `PlayerCount`
+- [ ] `Config`
 - [ ] `PlayerId` + `Player`
 - [ ] `Bank`, `Market`, `Decks`
 - [ ] Setup 2–4 joueurs
@@ -44,7 +45,7 @@ Reste en phase 1 :
 
 | Phase | Contenu | Séances estimées | Statut | Séances réelles |
 |---|---|---:|---|---:|
-| Fin phase 1 | Config, Player, Bank, Market, Decks, setup, tests | 3–5 | en cours | 1 suivie (5 h) |
+| Fin phase 1 | Config, Player, Bank, Market, Decks, setup, tests | 3–5 | en cours | 2 séances (7 h 14) |
 | Phase 2 | `Game`/`Decision`, actions légales, `apply`, défausse, nobles, fin de partie, vues | 10–15 | à faire | 0 |
 | Phase 3 | CLI jouable : rendu, saisie, hot-seat, agent aléatoire | 5–7 | à faire | 0 |
 | Phase 4 | Invariants, simulateur, benchmarks | 3–4 | à faire | 0 |
@@ -81,7 +82,7 @@ Modèle de ligne :
 | # | Date | Durée | Commit début | Commit fin | Étape terminée | Notes |
 |---:|---|---|---|---|---|---|
 | 1 | 2026-11-19 | 5 h | `eaa1413` | `358824b` | Catalogue, tests, planning | Séance longue, ~2,5–3 séances standard |
-| 2 |  |  |  |  |  |  |
+| 2 | 2026-11-26 | 2 h 14 | `d0b223c` | `d34f546` | `PlayerCount` + `TryFrom<u8>` + erreur typée | 19 h 24 → 21 h 38 ; `Config` reporté |
 | 3 |  |  |  |  |  |  |
 | 4 |  |  |  |  |  |  |
 | 5 |  |  |  |  |  |  |
@@ -89,6 +90,8 @@ Modèle de ligne :
 Le suivi commence le 2026-11-19. Les séances antérieures ne sont pas comptées.  
 Les estimations en séances supposent des séances standard de 1,5–2 h.  
 Une séance de 5 h correspond à environ 2,5–3 séances standard.
+
+Calibrage après 2 séances : 7 h 14 cumulées. Le pas `PlayerCount` (type, conversion faillible, erreur typée, 6 tests) a pris 2 h 14, soit environ 1,2 séance standard pour une estimation de 1 — léger dépassement, cohérent avec l'apprentissage des traits de conversion.
 
 ## Projection après quelques séances
 
