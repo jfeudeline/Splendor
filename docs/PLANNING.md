@@ -45,7 +45,7 @@ Reste en phase 1 :
 
 | Phase | Contenu | Séances estimées | Statut | Séances réelles |
 |---|---|---:|---|---:|
-| Fin phase 1 | Config, Player, Bank, Market, Decks, setup, tests | 3–5 | en cours | 3 séances (≤ 7 h 35) |
+| Fin phase 1 | Config, Player, Bank, Market, Decks, setup, tests | 3–5 | en cours | 3 séances (7 h 35) |
 | Phase 2 | `Game`/`Decision`, actions légales, `apply`, défausse, nobles, fin de partie, vues | 10–15 | à faire | 0 |
 | Phase 3 | CLI jouable : rendu, saisie, hot-seat, agent aléatoire | 5–7 | à faire | 0 |
 | Phase 4 | Invariants, simulateur, benchmarks | 3–4 | à faire | 0 |
@@ -83,7 +83,7 @@ Modèle de ligne :
 |---:|---|---|---|---|---|---|
 | 1 | 2026-11-19 | 5 h | `eaa1413` | `358824b` | Catalogue, tests, planning | Séance longue, ~2,5–3 séances standard |
 | 2 | 2026-11-26 | 2 h 14 | `d0b223c` | `d34f546` | `PlayerCount` + `TryFrom<u8>` + erreur typée | 19 h 24 → 21 h 38 ; `Config` reporté |
-| 3 | 2026-11-26 | ≤ 21 min (début non noté) | `cee4bda` | `1896c94` | `Config` (nombre de joueurs) + 3 tests | Fin 21 h 59 ; reprise non horodatée après 21 h 38 |
+| 3 | 2026-11-26 | 21 min | `cee4bda` | `1896c94` | `Config` (nombre de joueurs) + 3 tests | 21 h 38 → 21 h 59, reprise immédiate |
 | 4 |  |  |  |  |  |  |
 | 5 |  |  |  |  |  |  |
 
@@ -91,7 +91,7 @@ Le suivi commence le 2026-11-19. Les séances antérieures ne sont pas comptées
 Les estimations en séances supposent des séances standard de 1,5–2 h.  
 Une séance de 5 h correspond à environ 2,5–3 séances standard.
 
-Calibrage après 2 séances : 7 h 14 cumulées. Le pas `PlayerCount` (type, conversion faillible, erreur typée, 6 tests) a pris 2 h 14, soit environ 1,2 séance standard pour une estimation de 1 — léger dépassement, cohérent avec l'apprentissage des traits de conversion. Séance 3 (`Config`) : courte, ≤ 21 min — cohérent avec un type sans invariant, seulement un champ et trois tests.
+Calibrage après 2 séances : 7 h 14 cumulées. Le pas `PlayerCount` (type, conversion faillible, erreur typée, 6 tests) a pris 2 h 14, soit environ 1,2 séance standard pour une estimation de 1 — léger dépassement, cohérent avec l'apprentissage des traits de conversion. Séance 3 (`Config`) : 21 min — cohérent avec un type sans invariant, seulement un champ et trois tests.
 
 ## Projection après quelques séances
 
